@@ -39,7 +39,7 @@ async def upload_document(
     doc = Document(
         filename=filename,
         file_path=str(file_path),
-        user_id=current_user.id
+        user_id=current_user.id,
         status="uploaded"
     )
     db.add(doc)

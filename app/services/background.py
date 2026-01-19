@@ -1,5 +1,5 @@
 import asyncio
-from sqlalchemy.orm import session
+from sqlalchemy.orm import Session
 from pathlib import Path
 
 from app.db.session import SessionLocal
@@ -8,11 +8,12 @@ from app.services.extractor import extract_text
 from app.services.parser import parse_invoice
 
 
-async def process_document(document_id: int):
-    """Background task to extract  and parse document"""
+async def process_document_task(document_id: int):
+    """Background task to extract and parse document"""
     db = SessionLocal()
-
+    
     try:
+
         doc = db.query(Document).filter(Document.id == document_id).first()
         if not doc:
             return
@@ -20,13 +21,10 @@ async def process_document(document_id: int):
         doc.status = "processing"
         db.commit()
         
-        # Extract text
         raw_text = extract_text(doc.file_path)
         
-        # Parse invoice data
         parsed_data = parse_invoice(raw_text)
         
-        # Store results
         doc.extracted_text = raw_text
         doc.parsed_data = parsed_data  
         doc.status = "completed"
