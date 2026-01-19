@@ -7,6 +7,7 @@ from datetime import datetime
 from app.api.deps import get_current_user, get_db
 from app.models.user import User
 from app.models.document import Document
+from app.schemas.document import UploadResponse, DocumentRead, SearchResponse
 from app.services.background import process_document_task
 
 router = APIRouter()
@@ -16,7 +17,7 @@ UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 
-@router.post("/upload")
+@router.post("/upload", response_model= UploadResponse)
 async def upload_document(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
@@ -49,10 +50,10 @@ async def upload_document(
     # add background task
     background_tasks.add_task(process_document_task, doc.id)
     
-    return {"id": doc.id, "filename": filename, "status": "uploaded"}
+    return {"id": doc.id, "filename": filename, "status": "processing"}
 
 
-@router.get("/")
+@router.get("/", response_model=list[DocumentRead])
 async def list_documents(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -71,7 +72,7 @@ async def list_documents(
 
 
 
-@router.get("/{document_id}/status")
+@router.get("/{document_id}/status", response_model=DocumentRead)
 async def get_document_status(
         document_id: int,
          current_user: User = Depends(get_current_user),
@@ -95,7 +96,7 @@ async def get_document_status(
 
 
 
-@router.get("/search")
+@router.get("/search", response_model=SearchResponse)
 async def search_documents(
     q: str,
     current_user: User = Depends(get_current_user),
