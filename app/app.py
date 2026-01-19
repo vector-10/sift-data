@@ -1,7 +1,9 @@
 from fastapi import FastAPI
+from app.api.v1.api import api_router
 
-app = FastAPI()
+app = FastAPI(title="Sift API")
 
-@app.get("/greeting")
-def hello_world():
-    return {"message": "Hello World!"}
+@app.get("/")
+def root():
+    return { "message": "Sift API is online"}
+   
