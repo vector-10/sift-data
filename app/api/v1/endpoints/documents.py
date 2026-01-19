@@ -52,8 +52,26 @@ async def upload_document(
     return {"id": doc.id, "filename": filename, "status": "uploaded"}
 
 
+@router.get("/")
+async def list_documents(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get all documents for current user"""
+    docs = db.query(Document).filter(
+        Document.user_id == current_user.id
+    ).all()
+    
+    return [{
+        "id": doc.id,
+        "filename": doc.filename,
+        "status": doc.status,
+        "parsed_data": doc.parsed_data
+    } for doc in docs]
 
-router.get("/{document_id}/status")
+
+
+@router.get("/{document_id}/status")
 async def get_document_status(
         document_id: int,
          current_user: User = Depends(get_current_user),
@@ -74,3 +92,48 @@ async def get_document_status(
         "parsed_data": doc.parsed_data,
         "error": doc.error_message
     }
+
+
+
+@router.get("/search")
+async def search_documents(
+    q: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Search documents by vendor, invoice number, or extracted text"""
+    
+    # Search in extracted_text and parsed_data
+    documents = db.query(Document).filter(
+        Document.user_id == current_user.id,
+        Document.status == "completed"
+    ).all()
+    
+    results = []
+    search_term = q.lower()
+    
+    for doc in documents:
+        # Search in extracted text
+        if doc.extracted_text and search_term in doc.extracted_text.lower():
+            results.append({
+                "id": doc.id,
+                "filename": doc.filename,
+                "parsed_data": doc.parsed_data,
+                "match_type": "text"
+            })
+            continue
+        
+        # Search in parsed data (vendor, invoice_number)
+        if doc.parsed_data:
+            parsed = doc.parsed_data
+            if (parsed.get("vendor") and search_term in parsed.get("vendor", "").lower()) or \
+               (parsed.get("invoice_number") and search_term in str(parsed.get("invoice_number", "")).lower()):
+                results.append({
+                    "id": doc.id,
+                    "filename": doc.filename,
+                    "parsed_data": doc.parsed_data,
+                    "match_type": "metadata"
+                })
+    
+    return {"query": q, "count": len(results), "results": results}
+

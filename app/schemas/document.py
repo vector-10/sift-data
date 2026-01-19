@@ -6,19 +6,32 @@ class DocumentBase(BaseModel):
 
 class DocumentCreate(DocumentBase):
     file_path: str
-    owner_id: int
+    user_id: int
 
 class DocumentUpdate(BaseModel):
     status: Optional[str] = None
     extracted_text: Optional[str] = None
-    structured_data: Optional[Dict[str, Any]] = None
+    parsed_data: Optional[Dict[str, Any]] = None
+    error_message: Optional[str] = None
 
 class DocumentRead(DocumentBase):
     id: int
     status: str
     extracted_text: Optional[str] = None
-    structured_data: Optional[Dict[str, Any]] = None
-    owner_id: int
+    parsed_data: Optional[Dict[str, Any]] = None  
+    error_message: Optional[str] = None  
+    user_id: int
 
     class Config:
         from_attributes = True
+
+class UploadResponse(BaseModel):
+    id: int
+    filename: str
+    status: str
+
+
+class SearchResponse(BaseModel):
+    query: str
+    count: int
+    results: list 
