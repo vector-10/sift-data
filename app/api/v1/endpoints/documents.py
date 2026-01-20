@@ -91,7 +91,8 @@ async def get_document_status(
         "filename": doc.filename,
         "status": doc.status,
         "parsed_data": doc.parsed_data,
-        "error": doc.error_message
+        "error": doc.error_message,
+        "user_id": doc.user_id
     }
 
 
